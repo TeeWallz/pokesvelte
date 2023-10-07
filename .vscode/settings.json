@@ -1,0 +1,13 @@
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "cSpell.words": ["openapi", "Pokedex", "uuidv"],
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "svelte.enable-ts-plugin": true
+}
