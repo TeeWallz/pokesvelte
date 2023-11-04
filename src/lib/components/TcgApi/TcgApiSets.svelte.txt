@@ -1,0 +1,105 @@
+<script lang="ts">
+    import type { TcgApiSet } from "@prisma/client";
+    export let tcgApiSets: TcgApiSet[];
+</script>
+
+<div class="overflow-x-auto mx-auto">
+    <div class="overflow-x-auto">
+        <table class="table table-xs">
+            <!-- head -->
+            <thead>
+                <tr>
+                    <th>
+                        <label>
+                            <input
+                                type="checkbox"
+                                class="checkbox checkbox-xs"
+                            />
+                        </label>
+                    </th>
+                    <th>Name</th>
+                    <th>Job</th>
+                    <th />
+                </tr>
+            </thead>
+            <tbody>
+                {#each tcgApiSets as tcgApiSet (tcgApiSet.id)}
+                    <tr>
+                        <th>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    class="checkbox checkbox-xs"
+                                />
+                            </label>
+                        </th>
+                        <td>
+                            <div class="flex items-center space-x-3">
+                                <div class="">
+                                    <div class="w-12 h-12 object-contain">
+                                        <img
+                                            class="object-contain max-h-12 max-w-12"
+                                            src={tcgApiSet.images?.symbol}
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="font-bold">
+                                        {tcgApiSet.name}
+                                        <div class="text-sm opacity-50">
+                                            <span
+                                                class="badge badge-ghost badge-sm"
+                                                >{tcgApiSet.series}</span
+                                            >
+                                            {#if tcgApiSet.requiresCardUpdate}
+                                                <div
+                                                    class="badge badge-neutral"
+                                                >
+                                                    stale
+                                                </div>
+                                            {:else}
+                                                <div class="badge">ok</div>
+                                            {/if}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div></td
+                        >
+                    </tr>
+                {/each}
+            </tbody>
+            <!-- foot -->
+            <tfoot>
+                <tr>
+                    <th />
+                    <th>Name</th>
+                    <th>Job</th>
+                    <th />
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- <table class="table table-xs">
+        <thead>
+            <tr>
+                <th>SetId</th>
+                <th>Name</th>
+                <th>UpdateNeeded</th>
+                <th />
+            </tr>
+        </thead>
+        <tbody>
+            {#each tcgApiSets as tcgApiSet (tcgApiSet.id)}
+                <tr>
+                    <th>{tcgApiSet.tcgSetId}</th>
+                    <th>{tcgApiSet.name}</th>
+                    <th>{tcgApiSet.requiresCardUpdate}</th>
+                    <th>x</th>
+                </tr>
+            {:else}
+                <li>No items</li>
+            {/each}
+        </tbody>
+    </table> -->
+</div>

@@ -1,13 +1,16 @@
 {
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
-  },
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.formatOnSave": true,
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "cSpell.words": ["openapi", "Pokedex", "uuidv"],
-  "typescript.preferences.importModuleSpecifier": "non-relative",
-  "svelte.enable-ts-plugin": true
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true
+    },
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[zmodel]": {
+        "editor.defaultFormatter": "zenstack.zenstack"
+    },
+    "cSpell.words": ["openapi", "Pokedex", "ptcgo", "uuidv"],
+    "typescript.preferences.importModuleSpecifier": "non-relative",
+    "svelte.enable-ts-plugin": true
 }

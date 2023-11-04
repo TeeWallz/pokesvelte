@@ -21,30 +21,16 @@
                 <h2 class="text-2xl font-bold text-gray-900 lg:text-3xl">
                     Sign in to your account
                 </h2>
-                {#if $page.data.session}
-                    {#if $page.data.session.user?.image}
-                        <span
-                            style="background-image: url('{$page.data.session
-                                .user.image}')"
-                            class="avatar"
-                        />
-                    {/if}
-                    <span class="signedInText">
-                        <small>Signed in as</small><br />
-                        <strong
-                            >{$page.data.session.user?.name ?? "User"}</strong
-                        >
-                    </span>
-                    <button on:click={() => signOut()} class="button"
-                        >Sign out</button
-                    >
-                {:else}
-                    <span class="notSignedInText">You are not signed in</span>
-                    <br />
-                    <button on:click={() => signIn("github")}
-                        >Sign In with GitHub</button
-                    >
-                {/if}
+                <span class="notSignedInText">You are not signed in</span>
+                <br />
+                <div class="flex flex-col w-full border-opacity-50">
+                    <a href="/auth/signin" class="btn">Sign in</a>
+                    <div class="divider">OR</div>
+                    <a href="/signup" class="btn">Sign up with Email</a>
+                </div>
+                <a />
+                <br />
+                <a href="/signup" />
             </div>
         </div>
     </div>

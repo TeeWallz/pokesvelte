@@ -1,0 +1,41 @@
+import "../schema"
+
+model Collection {
+    id String @id @default(uuid())
+    name String
+    ownerId String
+    tcgApiFilter String
+    collecting_variations Boolean
+    cardSort String
+    cardApiOrderBy String
+    collectionCards CollectionCard[]
+
+    owner User @relation(fields: [ownerId], references: [id])
+
+    @@index([ownerId, name])
+
+    @@allow('all', true)
+
+    @@schema("pokemon_collection")
+}
+
+model CollectionCard {
+    id String @id @default(uuid())
+    collectionId String
+    tcgApiCardId String
+    index Int
+    owned Boolean
+    ownedVariation Boolean
+    awaitingOwnership Boolean
+    awaitingOwnershipVariation Boolean
+
+    collection Collection @relation(fields: [collectionId], references: [id])
+    tcgApiCard TcgApiCard @relation(fields: [tcgApiCardId], references: [id])
+
+    @@index([collectionId, id])
+    @@index([collectionId, tcgApiCardId])
+
+    @@allow('all', true)
+
+    @@schema("pokemon_collection")
+}

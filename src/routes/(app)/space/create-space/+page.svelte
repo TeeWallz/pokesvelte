@@ -1,12 +1,12 @@
 <script lang="ts">
-    import { enhance } from '$app/forms';
-    import { goto } from '$app/navigation';
-    import type { ActionData } from '../$types';
+    import { enhance } from "$app/forms";
+    import { goto } from "$app/navigation";
+    import type { ActionData } from "../../$types";
 
     export let form: ActionData;
 
-    let name = form?.name ?? '';
-    let slug = form?.slug ?? '';
+    let name = form?.name ?? "";
+    let slug = form?.slug ?? "";
 </script>
 
 <div class="flex items-center justify-center h-full">
@@ -51,7 +51,7 @@
                 value="Create"
                 class="btn btn-primary px-8"
             />
-            <button class="btn btn-outline" on:click={() => goto('/')}>
+            <button class="btn btn-outline" on:click={() => goto("/")}>
                 Cancel
             </button>
         </div>

@@ -7,7 +7,7 @@ datasource db {
     provider = "postgresql"
     url = env("DATABASE_URL")
     directUrl = env("DATABASE_DIRECT_URL")
-    schemas = ["base", "todo_app"]
+    schemas = ["base", "todo_app", "pokemon_tcg_api", "pokemon_collection"]
 }
 
 generator client {
@@ -18,6 +18,65 @@ generator client {
 enum SpaceUserRole {
     USER
     ADMIN
+    @@schema("todo_app")
+}
+
+model Account {
+    id String @id() @default(cuid())
+    userId String
+    type String
+    provider String
+    providerAccountId String
+    refresh_token String? @db.Text()
+    access_token String? @db.Text()
+    expires_at Int?
+    token_type String?
+    scope String?
+    id_token String? @db.Text()
+    session_state String?
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([provider, providerAccountId])
+    @@schema("base")
+}
+
+model Session {
+    id String @id() @default(cuid())
+    sessionToken String @unique()
+    userId String
+    expires DateTime
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@schema("base")
+}
+
+/// @@allow('create,read', true)
+/// @@allow('all', auth() == this)
+model User {
+    id String @id() @default(cuid())
+    name String?
+    email String? @unique()
+    /// @password
+    /// @omit
+    password String?
+    emailVerified DateTime?
+    image String?
+    accounts Account[]
+    sessions Session[]
+    spaces SpaceUser[]
+    todos Todo[]
+    lists List[]
+    collection Collection[]
+
+    @@schema("base")
+}
+
+model VerificationToken {
+    identifier String
+    token String @unique()
+    expires DateTime
+
+    @@unique([identifier, token])
     @@schema("base")
 }
 
@@ -96,57 +155,93 @@ model Todo {
     @@schema("todo_app")
 }
 
-model Account {
-    id String @id() @default(cuid())
-    userId String
-    type String
-    provider String
-    providerAccountId String
-    refresh_token String? @db.Text()
-    access_token String? @db.Text()
-    expires_at Int?
-    token_type String?
-    scope String?
-    id_token String? @db.Text()
-    session_state String?
-    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+/// @@allow('all', true)
+model Collection {
+    id String @id() @default(uuid())
+    name String
+    ownerId String
+    tcgApiFilter String
+    collecting_variations Boolean
+    cardSort String
+    cardApiOrderBy String
+    collectionCards CollectionCard[]
+    owner User @relation(fields: [ownerId], references: [id])
 
-    @@unique([provider, providerAccountId])
-    @@schema("base")
+    @@index([ownerId, name])
+    @@schema("pokemon_collection")
 }
 
-model Session {
-    id String @id() @default(cuid())
-    sessionToken String @unique()
-    userId String
-    expires DateTime
-    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+/// @@allow('all', true)
+model CollectionCard {
+    id String @id() @default(uuid())
+    collectionId String
+    tcgApiCardId String
+    index Int
+    owned Boolean
+    ownedVariation Boolean
+    awaitingOwnership Boolean
+    awaitingOwnershipVariation Boolean
+    collection Collection @relation(fields: [collectionId], references: [id])
+    tcgApiCard TcgApiCard @relation(fields: [tcgApiCardId], references: [id])
 
-    @@schema("base")
+    @@index([collectionId, id])
+    @@index([collectionId, tcgApiCardId])
+    @@schema("pokemon_collection")
 }
 
-/// @@allow('create,read', true)
-/// @@allow('all', auth() == this)
-model User {
-    id String @id() @default(cuid())
-    name String?
-    email String? @unique()
-    emailVerified DateTime?
-    image String?
-    accounts Account[]
-    sessions Session[]
-    spaces SpaceUser[]
-    todos Todo[]
-    lists List[]
+/// @@allow('all', true)
+model TcgApiSet {
+    id String @id() @default(uuid())
+    tcgSetId String @unique()
+    name String
+    series String
+    printedTotal Int
+    total Int
+    legalities String?
+    ptcgoCode String?
+    releaseDate DateTime
+    updatedAt DateTime
+    images Json?
+    requiresCardUpdate Boolean @default(true)
+    tcgApiCards TcgApiCard[]
 
-    @@schema("base")
+    @@index([tcgSetId])
+    @@schema("pokemon_tcg_api")
 }
 
-model VerificationToken {
-    identifier String
-    token String @unique()
-    expires DateTime
+/// @@allow('all', true)
+model TcgApiCard {
+    id String @id() @default(uuid())
+    tcgCardId String @unique()
+    tcgSetId String
+    name String
+    supertype String
+    subtypes String[]
+    hp String?
+    types String[]
+    evolvesFrom String?
+    evolvesTo Json[]
+    rules String[]
+    ancientTrait Json?
+    abilities Json[]
+    attacks Json[]
+    weaknesses Json[]
+    resistances Json[]
+    retreatCost String[]
+    convertedRetreatCost Int?
+    number String
+    artist String?
+    rarity String?
+    flavorText String?
+    nationalPokedexNumbers Int[]
+    legalities Json?
+    images Json
+    setLib Json?
+    setId String
+    set TcgApiSet @relation(fields: [setId], references: [id])
+    collectionCard CollectionCard[]
 
-    @@unique([identifier, token])
-    @@schema("base")
+    @@index([tcgCardId], name: "tcgCardId")
+    @@index([tcgSetId], name: "tcgSetId")
+    @@schema("pokemon_tcg_api")
 }

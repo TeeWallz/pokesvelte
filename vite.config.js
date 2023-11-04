@@ -1,6 +1,8 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 
 /** @type {import('vite').UserConfig} */
+process.env.POKEMONTCG_API_KEY = "";
+
 const config = {
     plugins: [sveltekit()],
     resolve: {

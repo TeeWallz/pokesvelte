@@ -1,0 +1,64 @@
+import "../schema"
+
+model TcgApiSet {
+    id String @id @default(uuid())
+    tcgSetId String @unique
+    name String
+    series String
+    printedTotal Int
+    total Int
+    legalities String?
+    ptcgoCode String?
+    releaseDate DateTime
+    updatedAt DateTime
+    images Json?
+    requiresCardUpdate Boolean @default(true)
+
+    tcgApiCards TcgApiCard[]
+
+    @@allow('all', true)
+
+    @@index([tcgSetId])
+    @@schema("pokemon_tcg_api")
+}
+
+model TcgApiCard {
+    id String @id @default(uuid())
+    tcgCardId String @unique
+    tcgSetId String
+    name String
+    supertype String
+    subtypes String[]
+    hp String?
+    types String[]
+    evolvesFrom String?
+    evolvesTo Json[]
+    rules String[]
+    ancientTrait Json?
+    abilities Json[]
+    attacks Json[]
+    weaknesses Json[]
+    resistances Json[]
+    retreatCost String[]
+    convertedRetreatCost Int?
+    number String
+    artist String?
+    rarity String?
+    flavorText String?
+    nationalPokedexNumbers Int[]
+    legalities Json?
+    images Json
+    setLib Json?
+
+    setId String
+
+    set TcgApiSet @relation(fields: [setId], references: [id])
+    collectionCard CollectionCard[]
+
+    @@index([tcgCardId], name: "tcgCardId")
+    @@index([tcgSetId], name: "tcgSetId")
+
+    @@allow('all', true)
+
+    @@schema("pokemon_tcg_api")
+}

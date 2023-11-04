@@ -6,6 +6,7 @@ export default {
     },
     plugins: [require('daisyui')],
     daisyui: {
-        themes: false,
+        themes: ["valentine", "light", "dark", "cupcake", "night", "dracula"],
     },
+    mode: 'jit',
 };
