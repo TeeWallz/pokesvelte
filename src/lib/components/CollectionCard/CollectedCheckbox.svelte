@@ -19,6 +19,7 @@
 
 <input
     type="checkbox"
+    class="checkbox"
     on:click={changeOwned}
     checked={$$props.cell.getValue()}
 />

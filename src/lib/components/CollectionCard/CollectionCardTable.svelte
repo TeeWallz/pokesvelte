@@ -1,45 +1,42 @@
 <script lang="ts">
-    import type { CollectionCard, TcgApiSet } from "@prisma/client";
-    import CollectedCheckbox from "./CollectedCheckbox.svelte";
-    export let initialCollectionCards: CollectionCard[];
-    export let initialCardQuery: any;
-
+    import { json } from "@sveltejs/kit";
     import { writable } from "svelte/store";
+    import {
+        useCountCollectionCard,
+        useFindManyCollectionCard,
+    } from "$lib/hooks";
     import {
         createSvelteTable,
         flexRender,
         getCoreRowModel,
-        getSortedRowModel,
         getPaginationRowModel,
+        type TableOptions,
+        type PaginationTableState,
         type PaginationState,
         type OnChangeFn,
-        type SortingState,
-        type SortingTableState,
-        type Column,
     } from "@tanstack/svelte-table";
-    import { createQuery } from "@tanstack/svelte-query";
-    import type {
-        ColumnDef,
-        TableOptions,
-    } from "@tanstack/table-core/src/types";
-    // import TcgApiSetsTableRow from "./TcgApiSetsTableRow.svelte";
-    // import TcgSetImage from "./TcgSetImage.svelte";
-    import { paginate } from "$lib/pagination";
-    import {
-        useFindManyCollectionCard,
-        useFindManyTcgApiSet,
-    } from "$lib/hooks";
     import _ from "lodash";
-    import { mediaQueryMatches } from "$lib/mediaQueries";
-    import { chooseColumns } from "$lib/tableUtils";
-    import moment from "moment";
+    import { paginate } from "$lib/pagination";
+    import type { CollectionCard } from "@prisma/client";
+    import { browser } from "$app/environment";
+    import { createQuery } from "@tanstack/svelte-query";
+    export let initialCollectionCards: any;
 
-    let requiresCardUpdate: "true" | "false" | "all" = "all"; // Set the desired value
-    export let collectionCardsQuery: ReturnType<
-        typeof useFindManyCollectionCard
-    >;
+    // Define your constants and variables
+    const PAGE_SIZE = 10;
 
-    $: collectionCardsQuery = useFindManyCollectionCard({
+    let dataPagination: PaginationState = {
+        pageIndex: 1,
+        pageSize: 9,
+    };
+    $: paginationState = {
+        display: paginate({
+            current: $table.getState().pagination.pageIndex + 1,
+            max: $table.getPageCount(),
+        }),
+    };
+
+    let cardQuery = {
         include: {
             tcgApiCard: {
                 include: {
@@ -48,142 +45,79 @@
             },
         },
         orderBy: [
-            {
-                tcgApiCard: {
-                    set: {
-                        releaseDate: "asc",
-                    },
-                },
-            },
-            {
-                tcgApiCard: {
-                    number: "asc",
-                },
-            },
+            { tcgApiCard: { set: { releaseDate: "asc" } } },
+            { tcgApiCard: { number: "asc" } },
         ],
-    });
-
-    const columns: { [id: string]: ColumnDef<CollectionCard, any>[] } = {
-        mobile: [
-            {
-                accessorKey: "tcgApiCard",
-                header: () => "Set",
-                // cell: (info: any) => TcgApiSetsTableRow,
-                footer: (info: any) => "Set",
-            },
-        ],
-        tablet: [
-            {
-                accessorKey: "releaseDate",
-                header: () => "Set",
-                // cell: (info: any) => TcgApiSetsTableRow,
-                footer: (info: any) => "Set",
-            },
-        ],
-        largeTablet: [
-            {
-                accessorKey: "releaseDate",
-                header: () => "Set",
-                // cell: (info: any) => TcgApiSetsTableRow,
-            },
-        ],
-        desktop: [
-            {
-                accessorKey: "tcgApiCard.tcgCardId",
-                header: () => "ID",
-                // cell: (info: any) => TcgSetImage,
-                size: 50,
-            },
-            {
-                accessorKey: "tcgApiCard.name",
-                header: () => "Name",
-                // cell: (info: any) => TcgSetImage,
-                size: 50,
-            },
-            {
-                accessorKey: "tcgApiCard.set.name",
-                header: () => "Set Name",
-            },
-            {
-                accessorKey: "tcgApiCard.set.series",
-                header: () => "Series",
-            },
-            {
-                accessorKey: "tcgApiCard.set.releaseDate",
-                header: () => "Release Date",
-                cell: (info: any) =>
-                    moment(info.row.original.tcgApiCard.set.releaseDate).format(
-                        "YYYY-MM-DD"
-                    ),
-            },
-            {
-                accessorKey: "owned",
-                header: () => "Owned",
-                cell: (info: any) => CollectedCheckbox,
-            },
-            {
-                accessorKey: "ownedVariation",
-                header: () => "Owned Variation",
-                cell: (info: any) => CollectedCheckbox,
-            },
-        ],
+        take: 9,
+        skip: dataPagination.pageIndex,
     };
 
-    const chosenColumns = chooseColumns($mediaQueryMatches, columns);
+    const collectionCardCountQuery = useCountCollectionCard();
+    let collectionCardCount: number = 0;
+    collectionCardCount = $collectionCardCountQuery.data ?? 0;
 
-    console.log($mediaQueryMatches);
-    let sorting: SortingState = [];
+    async function fetchCards(page = 0) {
+        cardQuery.skip = page * dataPagination.pageSize;
+        const cardPromise = await fetch(
+            `/api/model/collectionCard/findMany?q=${JSON.stringify(cardQuery)}`
+        );
+        const cardJson = await cardPromise.json();
+        // debugger;
+        console.log(cardJson);
+        $options.data = cardJson.data;
+        return cardJson;
+    }
 
-    const setSorting = (
-        updater: SortingState | ((arg0: SortingState) => SortingState)
-    ) => {
+    const columns = [
+        {
+            accessorKey: "id",
+            header: () => "ID",
+            // cell: (info: any) => TcgSetImage,
+            size: 50,
+        },
+    ];
+    let fetchedCardz = writable<CollectionCard[]>([]);
+    async function onPaginationChange(
+        updater
+    ): Promise<OnChangeFn<PaginationState>> {
         if (updater instanceof Function) {
-            sorting = updater(sorting);
+            dataPagination = updater(dataPagination);
         } else {
-            sorting = updater;
+            dataPagination = updater;
         }
         options.update((old) => ({
             ...old,
             state: {
                 ...old.state,
-                sorting,
+                pagination: dataPagination,
             },
         }));
-    };
-
-    $: paginationState = {
-        display: paginate({
-            current: $table.getState().pagination.pageIndex + 1,
-            max: $table.getPageCount(),
-        }),
-    };
-
-    let options = writable<TableOptions<CollectionCard>>({
-        data: initialCollectionCards,
-        columns: chosenColumns,
-        getCoreRowModel: getCoreRowModel(),
-        state: {
-            sorting,
-        },
-        onSortingChange: setSorting,
-        getSortedRowModel: getSortedRowModel(),
-        getPaginationRowModel: getPaginationRowModel(), // Enable pagination
-        autoResetPageIndex: true, // Automatically update pagination when data or page size changes
+    }
+    $: query = createQuery<CollectionCard[], any>({
+        queryKey: ["todos", dataPagination.pageIndex],
+        queryFn: () => fetchCards(dataPagination.pageIndex),
+        initialData: [],
     });
 
-    // const rerender = () => {
-    //     options.update((options) => ({
-    //         ...options,
-    //         data: $tcgApiSets?.data ?? inititalSets,
-    //     }));
-    // };
+    $: {
+        if ($table.getState) {
+            console.log($table.getState().pagination);
+        }
+    }
 
+    // Define your options store
+    const options = writable<TableOptions<CollectionCard>>({
+        data: $query?.data ?? [],
+        columns: columns,
+        getCoreRowModel: getCoreRowModel(),
+        state: {
+            pagination: dataPagination,
+        },
+        onPaginationChange: onPaginationChange,
+        manualPagination: true,
+        pageCount: 99,
+    });
     let table = createSvelteTable(options);
-    $: $table.setPageSize(9);
-    $: options.update((options) => ({
-        ...options,
-        data: $collectionCardsQuery?.data ?? initialCollectionCards,
-    }));
 </script>
 
 <div class="p-2">
@@ -203,7 +137,7 @@
             </select>
         </span>
     </div>
-    <table class="table table-xs">
+    <table class="table">
         <thead>
             {#each $table.getHeaderGroups() as headerGroup}
                 <tr>
@@ -232,7 +166,7 @@
         </thead>
         <tbody>
             {#each $table.getRowModel().rows as row}
-                <tr>
+                <tr class="hover">
                     {#each row.getVisibleCells() as cell}
                         <td>
                             <svelte:component
@@ -292,7 +226,7 @@
             <button
                 class="join-item btn btn-sm"
                 on:click={() => $table.nextPage()}
-                disabled={_.isNull(paginationState.display.next)}>»</button
+                disabled={false}>»</button
             >
         </div>
     </div>
@@ -320,4 +254,15 @@
             </select>
         </span>
     </div>
+    <!-- {JSON.stringify(dataPagination)}
+    <hr />
+    {JSON.stringify($table.getState())}
+    <hr /> -->
+    {JSON.stringify(cardQuery.skip)}
+    <hr />
+    {JSON.stringify(dataPagination)}
+    <hr />
+    <!-- {JSON.stringify($query.data)} -->
+    <hr />
+    <!-- {JSON.stringify($options.data)} -->
 </div>
