@@ -4,6 +4,7 @@ import { fail } from "@sveltejs/kit";
 import { getEnrichedCollections } from "$lib/queries";
 import { get } from "lodash";
 import { getPaginatedCollectionCards } from "$lib/queries/collectionCards";
+import { COLLECTION_CARD_QUERY } from "$lib/queryJson";
 
 export const load = (async (arg) => {
     let collectionId = arg.params.id;
@@ -25,11 +26,40 @@ export const load = (async (arg) => {
     const page = parseInt(arg.url.searchParams.get("page") || "1");
     console.log("page", page);
 
-    const collectionCards = await getPaginatedCollectionCards(
-        parseInt(arg.url.searchParams.get("page") || "1"),
-        parseInt(arg.url.searchParams.get("pageSize") || "9"),
-        arg.locals.db
-    );
+    const additionalFilters = {
+        where: { collectionId: `${collectionId}` },
+    };
+    const collectionCards = await arg.locals.db.collectionCard.findMany({
+        ...COLLECTION_CARD_QUERY,
+        ...additionalFilters,
+    });
+
+    const customSQLData = await arg.locals.db.$queryRaw`
+        SELECT *, 
+            ROW_NUMBER() OVER (PARTITION BY "collectionId" ORDER BY "releaseDate" ASC, "number" ASC) as postgres_rank
+        FROM "CollectionCard"
+        WHERE "collectionId" IN (
+            SELECT "id" FROM "Collection" ORDER BY "createdAt" DESC LIMIT 9
+        )
+        ORDER BY "releaseDate" ASC, "number" ASC
+    `;
+
+    const binderPageSize = 9;
+
+    const combinedResult = collectionCards.map((prismaItem, index) => {
+        const postgresRank = customSQLData[index].postgres_rank;
+        const page = Math.floor((postgresRank - 1) / binderPageSize) + 1;
+        const slot = ((postgresRank - 1) % binderPageSize) + 1;
+
+        return {
+            ...prismaItem,
+            postgresRank,
+            page,
+            slot,
+        };
+    });
+
+    console.log(combinedResult);
 
     return {
         collection: collection[0],

@@ -1,9 +1,17 @@
-export function paginate({ current, max }: { current: number; max: number }): {
+export function paginate({
+    current,
+    max,
+}: {
+    current: number;
+    max: number;
+    pageCount: number;
+}): {
     current: number;
     prev: number | null;
     next: number | null;
     items: (string | number)[];
 } {
+    current = Math.max(1, current);
     let prev = current === 1 ? null : current - 1,
         next = current === max ? null : current + 1,
         items: (string | number)[] = [1];

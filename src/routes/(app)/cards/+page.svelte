@@ -16,5 +16,6 @@
         bind:collectionCardsQuery
         initialCollectionCards={data.collectionCards}
         initialCardQuery={data.initialCardQuery}
+        additionalFilters={{}}
     />
 </div>

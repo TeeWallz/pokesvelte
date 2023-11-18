@@ -34,7 +34,9 @@
         <CollectionCardTable
             bind:collectionCardsQuery
             initialCollectionCards={data.collectionCards ?? []}
-            cardQueryOverride={{ collectionId: data?.collection?.id }}
+            additionalFilters={{
+                collectionId: data?.collection?.id,
+            }}
         />
     </div>
 </div>
